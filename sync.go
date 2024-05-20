@@ -10,15 +10,15 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	terra "github.com/classic-terra/core/v2/app"
-	core "github.com/classic-terra/core/v2/types"
+	terra "github.com/classic-terra/core/v3/app"
+	core "github.com/classic-terra/core/v3/types"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/proxy"
+	tendermint "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/proxy"
-	tendermint "github.com/tendermint/tendermint/types"
 	blockFeeder "github.com/terra-money/mantlemint/block_feed"
 	"github.com/terra-money/mantlemint/config"
 	"github.com/terra-money/mantlemint/db/heleveldb"
@@ -31,7 +31,7 @@ import (
 	"github.com/terra-money/mantlemint/rpc"
 	"github.com/terra-money/mantlemint/store/rootmulti"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 // initialize mantlemint for v0.34.x
@@ -70,7 +70,8 @@ func main() {
 
 	// customize CMS to limit kv store's read height on query
 	cms := rootmulti.NewStore(batched, logger, hldb)
-	vpr := viper.GetViper()
+	//vpr := viper.GetViper()
+	appOptions := make(simtestutil.AppOptionsMap, 0)
 
 	var wasmOpts []wasm.Option
 	app := terra.NewTerraApp(
@@ -80,19 +81,20 @@ func main() {
 		true, // need this so KVStores are set
 		make(map[int64]bool),
 		mantlemintConfig.Home,
-		0,
 		codec,
-		vpr,
+		appOptions,
 		wasmOpts,
 		fauxMerkleModeOpt,
 		func(ba *baseapp.BaseApp) {
 			ba.SetCMS(cms)
 		},
+		baseapp.SetChainID(mantlemintConfig.ChainID),
 	)
 
 	// create app...
 	appCreator := mantlemint.NewConcurrentQueryClientCreator(app)
-	appConns := proxy.NewAppConns(appCreator)
+	appMetrics := proxy.NopMetrics()
+	appConns := proxy.NewAppConns(appCreator, appMetrics)
 	appConns.SetLogger(logger)
 	if startErr := appConns.OnStart(); startErr != nil {
 		panic(startErr)

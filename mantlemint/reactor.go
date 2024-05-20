@@ -4,15 +4,15 @@ import (
 	"log"
 	"sync"
 
-	"github.com/tendermint/tendermint/consensus"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	"github.com/tendermint/tendermint/proxy"
-	"github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/store"
-	tendermint "github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/store"
+	tendermint "github.com/cometbft/cometbft/types"
 	"github.com/terra-money/mantlemint/db/wrapped"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 var _ Mantlemint = (*Instance)(nil)
@@ -118,16 +118,20 @@ func (mm *Instance) LoadInitialState() error {
 }
 
 func (mm *Instance) Inject(block *tendermint.Block) error {
-	currentState := mm.lastState
-	blockID := tendermint.BlockID{
-		Hash:          block.Hash(),
-		PartSetHeader: block.MakePartSet(tendermint.BlockPartSizeBytes).Header(),
-	}
-
 	// apply this block
 	var nextState state.State
 	var retainHeight int64
 	var err error
+
+	currentState := mm.lastState
+	partset, err := block.MakePartSet(tendermint.BlockPartSizeBytes)
+	if err != nil {
+		return err
+	}
+	blockID := tendermint.BlockID{
+		Hash:          block.Hash(),
+		PartSetHeader: partset.Header(),
+	}
 
 	// patch AppHash of lastState to the current block's last app hash
 	// because we still want to use fauxMerkleTree for speed (way faster this way!)

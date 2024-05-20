@@ -3,14 +3,14 @@ package rpc
 import (
 	"context"
 
-	abcicli "github.com/tendermint/tendermint/abci/client"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/bytes"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/rpc/core"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tendermint "github.com/tendermint/tendermint/types"
+	abcicli "github.com/cometbft/cometbft/abci/client"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cometbft/cometbft/rpc/core"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	tendermint "github.com/cometbft/cometbft/types"
 )
 
 var _ rpcclient.Client = (*MantlemintRPCClient)(nil)
@@ -94,6 +94,14 @@ func (m *MantlemintRPCClient) String() string {
 }
 
 func (m *MantlemintRPCClient) SetLogger(logger tmlog.Logger) {
+	panic("implement me")
+}
+
+func (m *MantlemintRPCClient) Header(ctx context.Context, height *int64) (*coretypes.ResultHeader, error) {
+	panic("implement me")
+}
+
+func (m *MantlemintRPCClient) HeaderByHash(ctx context.Context, hash bytes.HexBytes) (*coretypes.ResultHeader, error) {
 	panic("implement me")
 }
 
